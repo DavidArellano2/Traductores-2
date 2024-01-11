@@ -1,0 +1,195 @@
+package Back_Elements.Analizers.syntatic;
+
+import java.util.concurrent.CancellationException;
+
+import Back_Elements.Repository.ErrorMessage;
+import Back_Elements.Repository.Back_Interfaces.Analizers.GramaticOneAnalizer;
+
+/**
+ * Predective_Analizer, 
+ * here, we check if we have 
+ * a valid string
+ */
+public class SyntactGone implements GramaticOneAnalizer{
+// private
+   //---tribute---
+   private String inString;
+   private int index;
+   private char preanalis;
+   private ErrorMessage errorMessage = new ErrorMessage();
+   private boolean invalidString;
+   //---methods---
+   private void coincidir(char character){
+        //System.out.println("coincidi");
+        final boolean itIsMatching = (character == preanalis);
+        if (!itIsMatching){
+            errorMessage.setErrorInfo("deberia tener un '" + character + "' en el caracter: " + index);  
+            errorMessage.setErrorState(true);
+            throw new CancellationException(); 
+        }
+        //System.out.println(character);
+        index++;
+   }
+    private void subAdd(){ // usando iteraciones.
+        while(true){
+            //System.out.println("subAdd");
+            preanalis = inString.charAt(index);
+            switch (preanalis){ //pre-analysis
+                case '+':
+                    coincidir('+');
+                    term();
+                    continue;
+                case '-':
+                    coincidir('-');
+                    term();
+                    continue;
+                default:
+                    return;
+            }
+        }
+    } 
+    private void term(){
+        //System.out.println("term");
+        factor();
+        divMul();
+    }
+    private void divMul(){ // usando iteraciones.
+        while(true){
+            //System.out.println("divMul");
+            preanalis = inString.charAt(index);
+            switch (preanalis){ //pre-analysis
+                case '*':
+                    coincidir('*');
+                    factor();
+                    continue;
+                case '/':
+                    coincidir('/');
+                    factor();
+                    continue;
+                default:
+                    return;
+            }
+        }
+    } 
+    private void factor(){
+        while(true){
+            //System.out.println("factor");
+            preanalis = inString.charAt(index);
+            switch(preanalis){
+                case '(':   
+                    coincidir('(');
+                    expression();
+                    coincidir(')');
+                    return;
+                default:
+                    digito();
+                    return;
+            }
+        }
+    }
+    private void digito(){
+        preanalis = inString.charAt(index);
+        final boolean digit = Character.isDigit(preanalis);
+        //System.out.println("digito");
+        if(digit){  
+            coincidir(preanalis);
+            return; 
+        }
+        //here, we will detect this string isn't from the language.
+        errorMessage.setErrorInfo("deberia tener un digito, en el caracter: " + index);
+        errorMessage.setErrorState(true);
+        throw new CancellationException();
+        
+    }
+    private void expression(){
+        //System.out.println("expression");
+        term(); 
+        subAdd();  
+    }
+// public 
+    public ErrorMessage expressionInitial(){
+        try {
+            this.index = 0;
+            if(invalidString == true){ 
+                throw new CancellationException(); 
+            }
+            expression();
+            if(preanalis != '|'){
+                errorMessage.setErrorInfo("deberia ser un: * / + -");
+                errorMessage.setErrorState(true);
+                throw new CancellationException();
+            }
+            errorMessage.setErrorInfo("si pertenece al lenguaje");
+            errorMessage.setErrorState(false);
+            return errorMessage;
+        }catch(CancellationException expected){  
+            //If we dected, it isn't from language, try and catch will be actived.
+            return errorMessage; 
+        }
+    }
+    //---setters and getters---
+    public String getInString() {
+        return inString;
+    }
+    public void setInString(String string) {
+        final char stopChar = '|';
+        final boolean itsThere = string.endsWith("|");
+        if(itsThere){
+            this.invalidString = true;
+        }
+        this.inString = string + stopChar;
+    }
+    //---Constructors---
+    public SyntactGone(String string) {
+        setInString(string);
+        this.index = 0;
+        this.invalidString= false;
+
+    }
+    public SyntactGone() {
+        setInString("");
+        this.index = 0;
+        this.invalidString= false;
+    }
+    
+}
+
+/// usando recursividad
+/*
+ * private void divMul(){
+        charCompared = inString.charAt(index);
+        switch (charCompared){ //pre-analysis
+            case '*':
+                coincidir(charCompared);
+                factor();
+                divMul();
+            break;
+            case '/':
+                coincidir(charCompared);
+                factor();
+                divMul();
+            break;
+            default:
+            break;
+        }
+    }
+ */
+/*
+ * private void subAdd(){
+        charCompared = inString.charAt(index);
+        switch (charCompared){ //pre-analysis
+            case '+':
+                coincidir(charCompared);
+                term();
+                subAdd();
+            break;
+            case '-':
+                coincidir(charCompared);
+                term();
+                subAdd();
+            break;
+            default:
+            break;
+        }
+    }
+ */
